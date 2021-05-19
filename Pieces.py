@@ -7,11 +7,11 @@ class Piece:
     #black = "b"
     
     # pawn = "p"
-    # knight = "k"
+    # knight = "n"
     # bishop = "b"
     # rook = "r"
     # queen = "q"
-    # king = "K"
+    # king = "k"
     
     def __init__(self, type, color):
         self.type = type

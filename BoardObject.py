@@ -8,11 +8,11 @@ class Board:
     #black = "b"
     
     # pawn = "p"
-    # knight = "k"
+    # knight = "n"
     # bishop = "b"
     # rook = "r"
     # queen = "q"
-    # king = "K"
+    # king = "k"
     
     def __init__(self):
         self.board = []
@@ -26,6 +26,30 @@ class Board:
 
     def make_move(self, initial, final):
         pass
+
+    def reset_board(self):
+        for r in range(8):
+            for c in range(8):
+                self.board[r][c] = None
+
+    def new_position(self, fen):
+        self.reset_board()
+        
+        row = 0
+        column = 0
+        for char in fen[0: fen.find(" ")]:
+            if char.isdigit():
+                column += 1
+            elif char == '/':
+                row += 1
+                column = 0
+            elif char.isupper():
+                self.board[row][column] = Piece(char.lower(), 'w')
+                column += 1
+            else:
+                self.board[row][column] = Piece(char, 'b')
+                column += 1
+            
 
     def get_moves(self, pos):
         moves = []
@@ -56,7 +80,11 @@ def printBoard(board_object):
 if __name__ == "__main__":
     test_board = Board()
     test_board.add_piece("p", "w", (6, 1))
-    
     test_board.add_piece("p", "b", (5, 2))
     printBoard(test_board)
     print(test_board.get_moves((6, 1)))
+
+    print()
+    test_board.new_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    
+    printBoard(test_board)
