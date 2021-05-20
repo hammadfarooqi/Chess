@@ -7,7 +7,7 @@ class Board:
     #white = "w"
     #black = "b"
     
-    # pawn = "p"
+    # pawn = "p" - En Pasante
     # knight = "n"
     # bishop = "b"
     # rook = "r"
@@ -44,16 +44,18 @@ class Board:
                 row += 1
                 column = 0
             elif char.isupper():
-                self.board[row][column] = Piece(char.lower(), 'w')
+                self.add_piece(char.lower(), 'w', (row, column))
                 column += 1
             else:
-                self.board[row][column] = Piece(char, 'b')
+                self.add_piece(char, 'b', (row, column))
                 column += 1
             
 
     def get_moves(self, pos):
         moves = []
         piece = self.board[pos[0]][pos[1]]
+        if not piece:
+            return []
 
         if piece.type == "p":
             if not self.board[pos[0] - 1][pos[1]]:
@@ -64,6 +66,43 @@ class Board:
                 moves.append((pos[0] - 1, pos[1] - 1))
             if self.board[pos[0] - 1][pos[1] + 1] and self.board[pos[0] - 1][pos[1] + 1].color == piece.enemy:
                 moves.append((pos[0] - 1, pos[1] + 1))
+
+        if piece.type == "r":
+            #Going up from the piece
+            for r in range(pos[0] - 1, -1, -1):
+                if self.board[r][pos[1]]:
+                    if self.board[r][pos[1]].color == piece.enemy:
+                        moves.append((r, pos[1]))
+                    break
+                else:
+                    moves.append((r, pos[1]))
+
+            #Going down from the piece
+            for r in range(pos[0] + 1, 8, 1):
+                if self.board[r][pos[1]]:
+                    if self.board[r][pos[1]].color == piece.enemy:
+                        moves.append((r, pos[1]))
+                    break
+                else:
+                    moves.append((r, pos[1]))
+
+            #Going left from the piece
+            for c in range(pos[1] - 1, -1, -1):
+                if self.board[pos[0]][c]:
+                    if self.board[pos[0]][c].color == piece.enemy:
+                        moves.append((pos[0], c))
+                    break
+                else:
+                    moves.append((pos[0], c))
+
+            #Going right from the piece
+            for c in range(pos[1] + 1, 8, 1):
+                if self.board[pos[0]][c]:
+                    if self.board[pos[0]][c].color == piece.enemy:
+                        moves.append((pos[0], c))
+                    break
+                else:
+                    moves.append((pos[0], c))
         
         return moves
 
@@ -86,5 +125,9 @@ if __name__ == "__main__":
 
     print()
     test_board.new_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    
+    test_board.add_piece("r", "w", (3, 4))
+    test_board.add_piece("r", "w", (3, 2))
+    test_board.add_piece("r", "b", (3, 6))
     printBoard(test_board)
+    
+    print(test_board.get_moves((3, 4)))
