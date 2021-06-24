@@ -7,14 +7,16 @@ class Board:
     #white = "w"
     #black = "b"
     
-    # pawn = "p" - Needs En Pasante
+    # Needs checking for check
+    # pawn = "p" - Needs En Pasante and promotion
     # knight = "n" - Done
     # bishop = "b" - Done
     # rook = "r" - Done
     # queen = "q" - Done
-    # king = "k" - 
+    # king = "k" - Needs Castle
     
     def __init__(self):
+        self.turn = "w"
         self.board = []
         for i in range(8):
             self.board.append([])
@@ -22,10 +24,16 @@ class Board:
                 self.board[i].append(None)
 
     def check_move(self, initial, final):
-        pass
+        if self.board[initial[0]][initial[1]] and self.board[initial[0]][initial[1]].color == self.turn and final in self.get_moves(initial):
+            return True
 
     def make_move(self, initial, final):
-        pass
+        if self.check_move(initial, final):
+            self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
+            self.board[initial[0]][initial[1]] = None
+            self.board[final[0]][final[1]].moved = True
+            self.turn = self.board[final[0]][final[1]].enemy
+            return True
 
     def reset_board(self):
         for r in range(8):
@@ -57,14 +65,21 @@ class Board:
             return []
 
         if piece.type == "p":
-            if not self.board[pos[0] - 1][pos[1]]:
-                moves.append((pos[0] - 1, pos[1]))
-                if (not piece.moved) and (not self.board[pos[0] - 2][pos[1]]):
-                    moves.append((pos[0] - 2, pos[1]))
-            if self.board[pos[0] - 1][pos[1] - 1] and self.board[pos[0] - 1][pos[1] - 1].color == piece.enemy:
-                moves.append((pos[0] - 1, pos[1] - 1))
-            if self.board[pos[0] - 1][pos[1] + 1] and self.board[pos[0] - 1][pos[1] + 1].color == piece.enemy:
-                moves.append((pos[0] - 1, pos[1] + 1))
+            if piece.color == "w":
+                color_factor = 1
+            else:
+                color_factor = -1
+            
+            if not self.board[pos[0] - 1 * color_factor][pos[1]]:
+                moves.append((pos[0] - 1 * color_factor, pos[1]))
+                if (not piece.moved) and (not self.board[pos[0] - 2 * color_factor][pos[1]]):
+                    moves.append((pos[0] - 2 * color_factor, pos[1]))
+            if pos[1]-1 >= 0:
+                if self.board[pos[0] - 1 * color_factor][pos[1] - 1] and self.board[pos[0] - 1 * color_factor][pos[1] - 1].color == piece.enemy:
+                    moves.append((pos[0] - 1 * color_factor, pos[1] - 1))
+            if pos[1]+1 <= 7:
+                if self.board[pos[0] - 1 * color_factor][pos[1] + 1] and self.board[pos[0] - 1 * color_factor][pos[1] + 1].color == piece.enemy:
+                    moves.append((pos[0] - 1 * color_factor, pos[1] + 1))
 
         if piece.type == "r":
             moves.extend(get_rook_moves(self.board, pos, piece))
@@ -108,6 +123,47 @@ class Board:
         if piece.type == "q":
             moves.extend(get_rook_moves(self.board, pos, piece))
             moves.extend(get_bishop_moves(self.board, pos, piece))
+
+        if piece.type == "k":
+            #Up
+            if pos[0]-1 >= 0:
+                if not self.board[pos[0]-1][pos[1]] or self.board[pos[0]-1][pos[1]].color == piece.enemy:
+                    moves.append((pos[0]-1, pos[1]))
+            
+            #Up left
+            if pos[0]-1 >= 0 and pos[1]-1 >= 0:
+                if not self.board[pos[0]-1][pos[1]-1] or self.board[pos[0]-1][pos[1]-1].color == piece.enemy:
+                    moves.append((pos[0]-1, pos[1]-1))
+
+            #Left
+            if pos[1]-1 >= 0:
+                if not self.board[pos[0]][pos[1]-1] or self.board[pos[0]][pos[1]-1].color == piece.enemy:
+                    moves.append((pos[0], pos[1]-1))
+            
+            #Down left
+            if pos[0]+1 <= 7 and pos[1]-1 >= 0:
+                if not self.board[pos[0]+1][pos[1]-1] or self.board[pos[0]+1][pos[1]-1].color == piece.enemy:
+                    moves.append((pos[0]+1, pos[1]-1))
+            
+            #Down
+            if pos[0]+1 <= 7:
+                if not self.board[pos[0]+1][pos[1]] or self.board[pos[0]+1][pos[1]].color == piece.enemy:
+                    moves.append((pos[0]+1, pos[1]))
+            
+            #Down right
+            if pos[0]+1 <= 7 and pos[1]+1 <= 7:
+                if not self.board[pos[0]+1][pos[1]+1] or self.board[pos[0]+1][pos[1]+1].color == piece.enemy:
+                    moves.append((pos[0]+1, pos[1]+1))
+
+            #Right
+            if pos[1]+1 <= 7:
+                if not self.board[pos[0]][pos[1]+1] or self.board[pos[0]][pos[1]+1].color == piece.enemy:
+                    moves.append((pos[0], pos[1]+1))
+            
+            #Up right
+            if pos[0]-1 >= 0 and pos[1]+1 <= 7:
+                if not self.board[pos[0]-1][pos[1]+1] or self.board[pos[0]-1][pos[1]+1].color == piece.enemy:
+                    moves.append((pos[0]-1, pos[1]+1))
 
         return moves
 
@@ -215,9 +271,23 @@ if __name__ == "__main__":
 
     # print()
     test_board.new_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    test_board.add_piece("n", "w", (4, 6))
-    test_board.add_piece("r", "w", (3, 2))
-    test_board.add_piece("r", "b", (3, 4))
-    printBoard(test_board)
+    # test_board.add_piece("n", "w", (4, 6))
+    # test_board.add_piece("r", "w", (3, 2))
+    # test_board.add_piece("r", "b", (3, 4))
+    # printBoard(test_board)
+    # test_board.check_move((7,1), (5,2))
+    # test_board.check_move((1,7), (3,7))
     
-    print(test_board.get_moves((3, 4)))
+    # print(test_board.get_moves((3, 4)))
+    while True:
+        printBoard(test_board)
+        user_move = input("Give move: ")
+        
+        while True:
+            move = user_move.split(",")
+            initial = (int(move[0]), int(move[1]))
+            final = (int(move[2]), int(move[3]))
+            if test_board.make_move(initial, final):
+                break
+            user_move = input("Invalid move. Give another move: ")
+
