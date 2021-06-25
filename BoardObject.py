@@ -24,8 +24,38 @@ class Board:
                 self.board[i].append(None)
 
     def check_move(self, initial, final):
-        if self.board[initial[0]][initial[1]] and self.board[initial[0]][initial[1]].color == self.turn and final in self.get_moves(initial):
-            return True
+        piece = self.board[initial[0]][initial[1]]
+        if piece and piece.color == self.turn and final in self.get_moves(initial):
+            old_final = self.board[final[0]][final[1]]
+            self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
+            self.board[initial[0]][initial[1]] = None
+            if piece.type == "k":
+                if not self.check_check(final, self.turn):
+                    self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                    self.board[final[0]][final[1]] = old_final
+                    return True
+            else:
+                if not self.check_check(self.find_king(self.turn), self.turn):
+                    self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                    self.board[final[0]][final[1]] = old_final
+                    return True
+            self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+            self.board[final[0]][final[1]] = old_final
+
+    def check_check(self, position, color):
+        old_piece = self.board[position[0]][position[1]]
+        if color == "w":
+            self.board[position[0]][position[1]] = Piece('k', 'w')
+            color = "b"
+        else:
+            self.board[position[0]][position[1]] = Piece('k', 'b')
+            color = "w"
+        for i, row in enumerate(self.board):
+            for j, item in enumerate(row):
+                if item and item.color == color and position in self.get_moves((i,j)):
+                    self.board[position[0]][position[1]] = old_piece
+                    return True
+        self.board[position[0]][position[1]] = old_piece
 
     def make_move(self, initial, final):
         if self.check_move(initial, final):
@@ -34,6 +64,12 @@ class Board:
             self.board[final[0]][final[1]].moved = True
             self.turn = self.board[final[0]][final[1]].enemy
             return True
+
+    def find_king(self, color):
+        for i, row in enumerate(self.board):
+            for j, item in enumerate(row):
+                if item and item.type == "k" and item.color == color:
+                    return (i, j)
 
     def reset_board(self):
         for r in range(8):
@@ -256,10 +292,14 @@ def get_rook_moves(board, pos, piece):
     return moves
 
 def printBoard(board_object):
-    board = board_object.board
+    # board = board_object.board
+    board = board_object
     for row in board:
         for element in row:
-            print(str(element), end = "")
+            if element:
+                print(str(element), end = "")
+            else:
+                print(" ** ", end = "")
         print()
 
 if __name__ == "__main__":
@@ -280,7 +320,7 @@ if __name__ == "__main__":
     
     # print(test_board.get_moves((3, 4)))
     while True:
-        printBoard(test_board)
+        printBoard(test_board.board)
         user_move = input("Give move: ")
         
         while True:
