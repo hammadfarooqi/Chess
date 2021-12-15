@@ -35,14 +35,15 @@ def refresh(board):
                 win.blit(pieces_dict[str(item)], (j*100, i*100))
     pygame.display.update()
 
-initial = (0, 0)
-final = (0, 0)
-
 if __name__=='__main__':
     normal = Board()
     normal.new_position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
-    while True:
+    initial = (0, 0)
+    final = (0, 0)
+    
+    play = True
+    while play:
         refresh(normal)
 
         for event in pygame.event.get():
@@ -56,8 +57,14 @@ if __name__=='__main__':
                 initial = real_pos
             if event.type == MOUSEBUTTONUP:
                 final = real_pos
-                if not normal.make_move(initial, final):
+                move_result = normal.make_move(initial, final)
+                if move_result[1]:
+                    print(move_result[1]+" lost!")
+                    play = False
+                    break
+                if move_result[0]:
                     print("invalid move")
+
         
         
 

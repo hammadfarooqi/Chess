@@ -7,7 +7,8 @@ class Board:
     #white = "w"
     #black = "b"
     
-    # Needs checking for check
+    # Check for checking - Done
+    # Check for checkmate - stil need
     # pawn = "p" - Needs En Pasante and promotion
     # knight = "n" - Done
     # bishop = "b" - Done
@@ -57,13 +58,27 @@ class Board:
                     return True
         self.board[position[0]][position[1]] = old_piece
 
+    def check_result(self):
+        gameover = None
+        if self.check_check(self.find_king(self.turn), self.turn):
+            gameover = self.turn
+            for i, row in enumerate(self.board):
+                for j, item in enumerate(row):
+                    if item and item.color == self.turn and len(self.get_legal_moves((i,j))) > 0:
+                        gameover = None
+                        break
+                if not gameover:
+                    break
+        return gameover
+
     def make_move(self, initial, final):
         if self.check_move(initial, final):
             self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
             self.board[initial[0]][initial[1]] = None
             self.board[final[0]][final[1]].moved = True
             self.turn = self.board[final[0]][final[1]].enemy
-            return True
+            
+            return True, self.check_result()
 
     def find_king(self, color):
         for i, row in enumerate(self.board):
@@ -203,11 +218,20 @@ class Board:
 
         return moves
 
+    def get_legal_moves(self, pos):
+        moves = self.get_moves(pos)
+        final_moves = []
+        for move in moves:
+            if self.check_move(pos, move):
+                final_moves.append(move)
+        return final_moves
+
     def add_piece(self, piece, color, pos):
         self.board[pos[0]][pos[1]] = Piece(piece, color)
     
     def remove_piece(self, pos):
         self.board[pos[0]][pos[1]] = None
+
 
 def get_bishop_moves(board, pos, piece):
     moves = []
