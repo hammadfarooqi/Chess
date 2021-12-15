@@ -8,7 +8,7 @@ class Board:
     #black = "b"
     
     # Check for checking - Done
-    # Check for checkmate - stil need
+    # Check for checkmate - Done
     # pawn = "p" - Needs En Pasante and promotion
     # knight = "n" - Done
     # bishop = "b" - Done
@@ -59,13 +59,13 @@ class Board:
         self.board[position[0]][position[1]] = old_piece
 
     def check_result(self):
-        gameover = None
+        gameover = ""
         if self.check_check(self.find_king(self.turn), self.turn):
             gameover = self.turn
             for i, row in enumerate(self.board):
                 for j, item in enumerate(row):
                     if item and item.color == self.turn and len(self.get_legal_moves((i,j))) > 0:
-                        gameover = None
+                        gameover = ""
                         break
                 if not gameover:
                     break
