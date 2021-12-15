@@ -79,6 +79,7 @@ class Board:
             self.turn = self.board[final[0]][final[1]].enemy
             
             return True, self.check_result()
+        return False, ""
 
     def find_king(self, color):
         for i, row in enumerate(self.board):

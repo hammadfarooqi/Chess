@@ -62,7 +62,7 @@ if __name__=='__main__':
                     print(move_result[1]+" lost!")
                     play = False
                     break
-                if move_result[0]:
+                if not move_result[0]:
                     print("invalid move")
 
         
