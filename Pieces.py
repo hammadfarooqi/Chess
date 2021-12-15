@@ -1,4 +1,4 @@
-from BoardObject import Board
+# from BoardObject import *
 #Position is always row, column
 #Top left = 0, 0
 
