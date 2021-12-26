@@ -327,7 +327,7 @@ class Board:
         moves = self.get_moves(pos)
         final_moves = []
         for move in moves:
-            if self.check_move(pos, move):
+            if self.check_move(pos, move)[0]:
                 final_moves.append(move)
         return final_moves
 
