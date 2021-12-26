@@ -18,7 +18,9 @@ class Board:
     
     def __init__(self):
         self.turn = "w"
+        self.need_promotion = []
         self.board = []
+        self.promotion_pieces = ("q", "r", "b", "n")
         for i in range(8):
             self.board.append([])
             for j in range(8):
@@ -71,15 +73,36 @@ class Board:
                     break
         return gameover
 
-    def make_move(self, initial, final):
-        if self.check_move(initial, final):
-            self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
-            self.board[initial[0]][initial[1]] = None
-            self.board[final[0]][final[1]].moved = True
-            self.turn = self.board[final[0]][final[1]].enemy
-            
-            return True, self.check_result()
-        return False, ""
+    def check_promotion(self):
+        if self.turn == "w":
+            for i, piece in enumerate(self.board[0]):
+                if piece and piece.type == "p":
+                    self.need_promotion = [0, i]
+                    return True
+        else:
+            for i, piece in enumerate(self.board[7]):
+                if piece and piece.type == "p":
+                    self.need_promotion = [7, i]
+                    return True
+        return False
+
+    def make_move(self, initial, final, promotion = ""):
+        if self.need_promotion:
+            if promotion.lower() in self.promotion_pieces:
+                self.add_piece(promotion.lower(), self.turn, self.need_promotion)
+                self.turn = self.board[self.need_promotion[0]][self.need_promotion[1]].enemy
+                self.need_promotion = []
+                return True, self.check_result(), self.need_promotion
+        else:
+            if self.check_move(initial, final):
+                self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
+                self.board[initial[0]][initial[1]] = None
+                self.board[final[0]][final[1]].moved = True
+                if not self.check_promotion():
+                    self.turn = self.board[final[0]][final[1]].enemy
+                
+                return True, self.check_result(), self.need_promotion
+        return False, "", self.need_promotion
 
     def find_king(self, color):
         for i, row in enumerate(self.board):

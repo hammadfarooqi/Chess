@@ -25,7 +25,7 @@ pieces_dict = {
     " bp ": pygame.transform.scale(pieces_img.subsurface((1000, 200, 200, 200)), (100, 100))    
 }
 
-def refresh(board):
+def refresh(board, need_promotion):
     win.fill((210, 180, 140))
     for i, row in enumerate(board.board):
         for j, item in enumerate(row):
@@ -33,6 +33,12 @@ def refresh(board):
                 win.fill((150, 75, 0), (j*100, i*100, 100, 100))
             if str(item) != 'None':
                 win.blit(pieces_dict[str(item)], (j*100, i*100))
+    if need_promotion:
+        win.fill((255, 255, 255), (175, 275, 450, 150))
+        win.blit((pieces_dict[" wn "]), (200, 300))
+        win.blit((pieces_dict[" wb "]), (300, 300))
+        win.blit((pieces_dict[" wr "]), (400, 300))
+        win.blit((pieces_dict[" wq "]), (500, 300))
     pygame.display.update()
 
 if __name__=='__main__':
@@ -41,10 +47,11 @@ if __name__=='__main__':
 
     initial = (0, 0)
     final = (0, 0)
+    need_promotion = False
     
     play = True
     while play:
-        refresh(normal)
+        refresh(normal, need_promotion)
 
         for event in pygame.event.get():
             pos = pygame.mouse.get_pos()
@@ -57,7 +64,20 @@ if __name__=='__main__':
                 initial = real_pos
             if event.type == MOUSEBUTTONUP:
                 final = real_pos
-                move_result = normal.make_move(initial, final)
+                
+                promotion = ""
+                if need_promotion and final[0] == 3:
+                    match final[1]:
+                        case 2:
+                            promotion = "n"
+                        case 3:
+                            promotion = "b"
+                        case 4:
+                            promotion = "r"
+                        case 5:
+                            promotion = "q"
+                move_result = normal.make_move(initial, final, promotion)
+                need_promotion = move_result[2]
                 if move_result[1]:
                     print(move_result[1]+" lost!")
                     play = False
