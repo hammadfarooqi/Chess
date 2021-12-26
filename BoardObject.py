@@ -14,7 +14,7 @@ class Board:
     # bishop = "b" - Done
     # rook = "r" - Done
     # queen = "q" - Done
-    # king = "k" - Needs Castle
+    # king = "k" - Done
     
     def __init__(self):
         self.turn = "w"
@@ -67,6 +67,27 @@ class Board:
                         self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
                         self.board[final[0]][final[1]] = old_final
                         self.board[final[0]+1*color_factor][final[1]] = old_enemy
+                    else:
+                        if in_moves[1] == "cr":
+                            color_factor = 1
+                        else:
+                            color_factor = -1
+                        if not self.check_check(initial, self.turn):
+                            old_piece = self.board[initial[0]][initial[1]]
+                            self.board[initial[0]][initial[1]+1*color_factor] = self.board[initial[0]][initial[1]]
+                            self.board[initial[0]][initial[1]] = None
+                            if not self.check_check((initial[0],initial[1]+1*color_factor), self.turn):
+                                self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]+1*color_factor]
+                                self.board[initial[0]][initial[1]+1*color_factor] = None
+                                if not self.check_check(final, self.turn):
+                                    self.board[initial[0]][initial[1]] = old_piece
+                                    self.board[initial[0]][initial[1]+1*color_factor] = None
+                                    self.board[initial[0]][initial[1]+2*color_factor] = None
+                                    return True, color_factor*2
+                            self.board[initial[0]][initial[1]] = old_piece
+                            self.board[initial[0]][initial[1]+1*color_factor] = None
+                            self.board[initial[0]][initial[1]+2*color_factor] = None
+
         return False,
 
     def check_check(self, position, color):
@@ -114,6 +135,7 @@ class Board:
         if self.need_promotion:
             if promotion.lower() in self.promotion_pieces:
                 self.add_piece(promotion.lower(), self.turn, self.need_promotion)
+                self.board[self.need_promotion[0]][self.need_promotion[1]].moved = True
                 self.turn = self.board[self.need_promotion[0]][self.need_promotion[1]].enemy
                 self.need_promotion = []
                 return True, self.check_result(), self.need_promotion
@@ -123,7 +145,14 @@ class Board:
                 self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
                 self.board[initial[0]][initial[1]] = None
                 if len(check_move) == 2:
-                    self.board[final[0]+1*check_move[1]][final[1]] = None
+                    if check_move[1] == -1 or check_move[1] == 1:
+                        self.board[final[0]+1*check_move[1]][final[1]] = None
+                    elif check_move[1] == 2:
+                        self.board[initial[0]][initial[1]+1] = self.board[initial[0]][initial[1]+3]
+                        self.board[initial[0]][initial[1]+3] = None
+                    else:
+                        self.board[initial[0]][initial[1]-1] = self.board[initial[0]][initial[1]-4]
+                        self.board[initial[0]][initial[1]-4] = None
 
                 #Dealing with first_move attribute for en passant
                 for i, row in enumerate(self.board):
@@ -254,6 +283,8 @@ class Board:
             if pos[1]-1 >= 0:
                 if not self.board[pos[0]][pos[1]-1] or self.board[pos[0]][pos[1]-1].color == piece.enemy:
                     moves.append((pos[0], pos[1]-1))
+                if not piece.moved and not self.board[pos[0]][pos[1]-1] and not self.board[pos[0]][pos[1]-2] and not self.board[pos[0]][pos[1]-3] and self.board[pos[0]][pos[1]-4] and not self.board[pos[0]][pos[1]-4].moved:
+                    moves.append((pos[0], pos[1]-2, "cl"))
             
             #Down left
             if pos[0]+1 <= 7 and pos[1]-1 >= 0:
@@ -274,6 +305,8 @@ class Board:
             if pos[1]+1 <= 7:
                 if not self.board[pos[0]][pos[1]+1] or self.board[pos[0]][pos[1]+1].color == piece.enemy:
                     moves.append((pos[0], pos[1]+1))
+                if not piece.moved and not self.board[pos[0]][pos[1]+1] and not self.board[pos[0]][pos[1]+2] and self.board[pos[0]][pos[1]+3] and not self.board[pos[0]][pos[1]+3].moved:
+                    moves.append((pos[0], pos[1]+2, "cr"))
             
             #Up right
             if pos[0]-1 >= 0 and pos[1]+1 <= 7:
@@ -303,7 +336,6 @@ class Board:
     
     def remove_piece(self, pos):
         self.board[pos[0]][pos[1]] = None
-
 
 def get_bishop_moves(board, pos, piece):
     moves = []
