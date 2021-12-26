@@ -28,22 +28,46 @@ class Board:
 
     def check_move(self, initial, final):
         piece = self.board[initial[0]][initial[1]]
-        if piece and piece.color == self.turn and final in self.get_moves(initial):
-            old_final = self.board[final[0]][final[1]]
-            self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
-            self.board[initial[0]][initial[1]] = None
-            if piece.type == "k":
-                if not self.check_check(final, self.turn):
+        if piece and piece.color == self.turn:
+            in_moves = self.move_in_get_moves(initial, final)
+            if in_moves[0]:
+                if len(in_moves) == 1:
+                    old_final = self.board[final[0]][final[1]]
+                    self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
+                    self.board[initial[0]][initial[1]] = None
+                    if piece.type == "k":
+                        if not self.check_check(final, self.turn):
+                            self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                            self.board[final[0]][final[1]] = old_final
+                            return True,
+                    else:
+                        if not self.check_check(self.find_king(self.turn), self.turn):
+                            self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                            self.board[final[0]][final[1]] = old_final
+                            return True,
                     self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
                     self.board[final[0]][final[1]] = old_final
-                    return True
-            else:
-                if not self.check_check(self.find_king(self.turn), self.turn):
-                    self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
-                    self.board[final[0]][final[1]] = old_final
-                    return True
-            self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
-            self.board[final[0]][final[1]] = old_final
+                else:
+                    if in_moves[1] == "ep":
+                        old_final = self.board[final[0]][final[1]]
+                        self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
+                        self.board[initial[0]][initial[1]] = None
+                        
+                        if self.turn == "w":
+                            color_factor = 1
+                        else:
+                            color_factor = -1
+                        old_enemy = self.board[final[0]+1*color_factor][final[1]]
+                        self.board[final[0]+1*color_factor][final[1]] = None
+                        if not self.check_check(self.find_king(self.turn), self.turn):
+                            self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                            self.board[final[0]][final[1]] = old_final
+                            self.board[final[0]+1*color_factor][final[1]] = old_enemy
+                            return True, color_factor
+                        self.board[initial[0]][initial[1]] = self.board[final[0]][final[1]]
+                        self.board[final[0]][final[1]] = old_final
+                        self.board[final[0]+1*color_factor][final[1]] = old_enemy
+        return False,
 
     def check_check(self, position, color):
         old_piece = self.board[position[0]][position[1]]
@@ -55,7 +79,7 @@ class Board:
             color = "w"
         for i, row in enumerate(self.board):
             for j, item in enumerate(row):
-                if item and item.color == color and position in self.get_moves((i,j)):
+                if item and item.color == color and self.move_in_get_moves((i,j), position)[0]:
                     self.board[position[0]][position[1]] = old_piece
                     return True
         self.board[position[0]][position[1]] = old_piece
@@ -94,10 +118,22 @@ class Board:
                 self.need_promotion = []
                 return True, self.check_result(), self.need_promotion
         else:
-            if self.check_move(initial, final):
+            check_move = self.check_move(initial, final)
+            if self.check_move(initial, final)[0]:
                 self.board[final[0]][final[1]] = self.board[initial[0]][initial[1]]
                 self.board[initial[0]][initial[1]] = None
-                self.board[final[0]][final[1]].moved = True
+                if len(check_move) == 2:
+                    self.board[final[0]+1*check_move[1]][final[1]] = None
+
+                #Dealing with first_move attribute for en passant
+                for i, row in enumerate(self.board):
+                    for j, item in enumerate(row):
+                        if item and item.first_move:
+                            item.first_move = False
+                if not self.board[final[0]][final[1]].moved:
+                    self.board[final[0]][final[1]].moved = True
+                    self.board[final[0]][final[1]].first_move = True
+
                 if not self.check_promotion():
                     self.turn = self.board[final[0]][final[1]].enemy
                 
@@ -152,9 +188,13 @@ class Board:
             if pos[1]-1 >= 0:
                 if self.board[pos[0] - 1 * color_factor][pos[1] - 1] and self.board[pos[0] - 1 * color_factor][pos[1] - 1].color == piece.enemy:
                     moves.append((pos[0] - 1 * color_factor, pos[1] - 1))
+                if (pos[0] * color_factor == 3 or pos[0] * color_factor == -4) and (not self.board[pos[0] - 1 * color_factor][pos[1] - 1]) and self.board[pos[0]][pos[1] - 1] and self.board[pos[0]][pos[1] - 1].color == piece.enemy and self.board[pos[0]][pos[1] - 1].type == "p" and self.board[pos[0]][pos[1] - 1].first_move:
+                    moves.append((pos[0] - 1 * color_factor, pos[1] - 1, "ep"))
             if pos[1]+1 <= 7:
                 if self.board[pos[0] - 1 * color_factor][pos[1] + 1] and self.board[pos[0] - 1 * color_factor][pos[1] + 1].color == piece.enemy:
                     moves.append((pos[0] - 1 * color_factor, pos[1] + 1))
+                if (pos[0] * color_factor == 3 or pos[0] * color_factor == -4) and (not self.board[pos[0] - 1 * color_factor][pos[1] + 1]) and self.board[pos[0]][pos[1] + 1] and self.board[pos[0]][pos[1] + 1].color == piece.enemy and self.board[pos[0]][pos[1] + 1].type == "p" and self.board[pos[0]][pos[1] + 1].first_move:
+                    moves.append((pos[0] - 1 * color_factor, pos[1] + 1, "ep"))
 
         if piece.type == "r":
             moves.extend(get_rook_moves(self.board, pos, piece))
@@ -241,6 +281,14 @@ class Board:
                     moves.append((pos[0]-1, pos[1]+1))
 
         return moves
+
+    def move_in_get_moves(self, pos, move):
+        for item in self.get_moves(pos):
+            if move[0] == item[0] and move[1] == item[1]:
+                if len(item) == 3:
+                    return True, item[2]
+                return True,
+        return False,
 
     def get_legal_moves(self, pos):
         moves = self.get_moves(pos)

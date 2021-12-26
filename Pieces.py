@@ -21,6 +21,7 @@ class Piece:
         else:
             self.enemy = "w"
         self.moved = False
+        self.first_move = False
     
     def __str__(self):
         return " "+self.color+self.type+" "
