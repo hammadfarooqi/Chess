@@ -9,7 +9,7 @@ class Board:
     
     # Check for checking - Done
     # Check for checkmate - Done
-    # pawn = "p" - Needs En Pasante and promotion
+    # pawn = "p" - Done
     # knight = "n" - Done
     # bishop = "b" - Done
     # rook = "r" - Done
