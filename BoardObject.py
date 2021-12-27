@@ -9,6 +9,7 @@ class Board:
     
     # Check for checking - Done
     # Check for checkmate - Done
+    # Check for stalemate
     # pawn = "p" - Done
     # knight = "n" - Done
     # bishop = "b" - Done
@@ -109,13 +110,15 @@ class Board:
         gameover = ""
         if self.check_check(self.find_king(self.turn), self.turn):
             gameover = self.turn
-            for i, row in enumerate(self.board):
-                for j, item in enumerate(row):
-                    if item and item.color == self.turn and len(self.get_legal_moves((i,j))) > 0:
-                        gameover = ""
-                        break
-                if not gameover:
+        else:
+            gameover = "s"
+        for i, row in enumerate(self.board):
+            for j, item in enumerate(row):
+                if item and item.color == self.turn and len(self.get_legal_moves((i,j))) > 0:
+                    gameover = ""
                     break
+            if not gameover:
+                break
         return gameover
 
     def check_promotion(self):
