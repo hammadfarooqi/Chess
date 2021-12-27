@@ -19,6 +19,7 @@ class Board:
     
     def __init__(self):
         self.turn = "w"
+        self.result = ""
         self.need_promotion = []
         self.board = []
         self.promotion_pieces = ("q", "r", "b", "n")
@@ -107,19 +108,19 @@ class Board:
         self.board[position[0]][position[1]] = old_piece
 
     def check_result(self):
-        gameover = ""
+        result = ""
         if self.check_check(self.find_king(self.turn), self.turn):
-            gameover = self.turn
+            result = self.turn
         else:
-            gameover = "s"
+            result = "s"
         for i, row in enumerate(self.board):
             for j, item in enumerate(row):
                 if item and item.color == self.turn and len(self.get_legal_moves((i,j))) > 0:
-                    gameover = ""
+                    result = ""
                     break
-            if not gameover:
+            if not result:
                 break
-        return gameover
+        return result
 
     def check_promotion(self):
         if self.turn == "w":
