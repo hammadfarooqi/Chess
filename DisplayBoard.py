@@ -24,8 +24,14 @@ pieces_dict = {
     " br ": pygame.transform.scale(pieces_img.subsurface((800, 200, 200, 200)), (100, 100)),
     " bp ": pygame.transform.scale(pieces_img.subsurface((1000, 200, 200, 200)), (100, 100))    
 }
+results_img = pygame.image.load('GameResults.png').convert_alpha()
+results_dict = {
+    "w": pygame.transform.scale(results_img.subsurface((0, 0, 100, 25)), (800, 200)),
+    "b": pygame.transform.scale(results_img.subsurface((0, 25, 100, 25)), (800, 200)),
+    "s": pygame.transform.scale(results_img.subsurface((0, 50, 100, 25)), (800, 200))
+}
 
-def refresh(board, need_promotion):
+def refresh(board, need_promotion, result):
     win.fill((210, 180, 140))
     for i, row in enumerate(board.board):
         for j, item in enumerate(row):
@@ -39,6 +45,8 @@ def refresh(board, need_promotion):
         win.blit((pieces_dict[" wb "]), (300, 300))
         win.blit((pieces_dict[" wr "]), (400, 300))
         win.blit((pieces_dict[" wq "]), (500, 300))
+    if result:
+        win.blit(results_dict[result], (0, 350))
     pygame.display.update()
 
 if __name__=='__main__':
@@ -49,9 +57,9 @@ if __name__=='__main__':
     final = (0, 0)
     need_promotion = False
     
-    play = True
-    while play:
-        refresh(normal, need_promotion)
+    result = ""
+    while True:
+        refresh(normal, need_promotion, result)
 
         for event in pygame.event.get():
             pos = pygame.mouse.get_pos()
@@ -65,25 +73,24 @@ if __name__=='__main__':
             if event.type == MOUSEBUTTONUP:
                 final = real_pos
                 
-                promotion = ""
-                if need_promotion and final[0] == 3:
-                    match final[1]:
-                        case 2:
-                            promotion = "n"
-                        case 3:
-                            promotion = "b"
-                        case 4:
-                            promotion = "r"
-                        case 5:
-                            promotion = "q"
-                move_result = normal.make_move(initial, final, promotion)
-                need_promotion = move_result[2]
-                if move_result[1]:
-                    print(move_result[1]+" lost!")
-                    play = False
-                    break
-                if not move_result[0]:
-                    print("invalid move")
+                if not result:
+                    promotion = ""
+                    if need_promotion and final[0] == 3:
+                        match final[1]:
+                            case 2:
+                                promotion = "n"
+                            case 3:
+                                promotion = "b"
+                            case 4:
+                                promotion = "r"
+                            case 5:
+                                promotion = "q"
+                    move_result = normal.make_move(initial, final, promotion)
+                    need_promotion = move_result[2]
+                    if move_result[1]:
+                        result = move_result[1]
+                    if not move_result[0]:
+                        print("invalid move")
 
         
         
